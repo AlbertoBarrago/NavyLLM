@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NavyLLM RAG Interfaccia</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+</head>
+<body>
+<div class="container">
+    <h1>Interfaccia NavyLLM RAG</h1>
+    <p class="intro">Sistema di intelligenza artificiale che integra Large Language Model (LLM) con Retrieval-Augmented Generation
+        (RAG), sviluppato da Alberto Barrago come progetto di ricerca e sperimentazione accademica.</p>
+
+    <div class="foldable-section">
+        <div class="foldable-header" onclick="toggleFoldable(this)">
+            <h3>Fonti di Dati ▶</h3>
+        </div>
+        <div class="foldable-content">
+            <ul>
+                <li>Agenzia delle Dogane e dei Monopoli (ADM)</li>
+                <li>Ministero delle Infrastrutture e dei Trasporti (MIT)</li>
+                <li>Capitanerie di Porto (Guardia Costiera):</li>
+                <li>Autorità di Sistema Portuale (AdSP)</li>
+                <li>Siti Specializzati di Diritto della Navigazione e Trasporti</li>
+                <li>Associazioni di Categoria: (Organizzazioni come Confitarma, Fedespedi, Assoporti, che spesso
+                    pubblicano guide o spiegazioni orientate agli operatori)
+                </li>
+                <li>Formulari Contrattuali Standard</li>
+                <li>Convenzioni Internazionali</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="question-section">
+        <h2>La tua Domanda</h2>
+        <div class="foldable-section">
+            <div class="foldable-header" onclick="toggleFoldable(this)">
+                <h3>Possibili domande ▶</h3>
+            </div>
+            <div class="foldable-content">
+                <ul>
+                    <li>Come si comporta il commercio navale?</li>
+                    <li>Come si comporta il commercio navale in un contesto specifico?</li>
+                </ul>
+            </div>
+        </div>
+        <label for="questionInput" class="sr-only">Inserisci la tua domanda</label>
+        <textarea id="questionInput" rows="4"
+                  placeholder="Inserisci qui la tua domanda sul commercio navale e le normative..."></textarea>
+    </div>
+
+    <button id="askButton">Chiedi al Modello</button>
+
+    <div class="response-section">
+        <h2>Risposta del Modello</h2>
+        <div id="responseArea">Attendo la tua domanda...</div>
+    </div>
+
+    <div class="context-section">
+        <h2>Contesto Recuperato (dal Dataset/Documenti)</h2>
+        <div id="contextArea">Il contesto pertinente apparirà qui dopo la domanda...</div>
+    </div>
+
+    <footer>
+        MIT license
+    </footer>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>

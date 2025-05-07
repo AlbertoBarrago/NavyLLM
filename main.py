@@ -110,8 +110,8 @@ def retrieve_context(
     query_embedding = np.array([query_embedding]).astype("float32")
 
     # Search the FAISS index for the most similar vectors to the query embedding
-    # D: distances (not used here), I: indices of the nearest chunks
-    indices = index.search(query_embedding, num_results)
+    # D: distances, I: indices of the nearest chunks
+    distances, indices = index.search(query_embedding, num_results)
 
     # Retrieve the original text chunks corresponding to the found indices
     retrieved_texts = [chunks[i] for i in indices[0]]
