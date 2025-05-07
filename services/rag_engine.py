@@ -7,8 +7,10 @@ import faiss
 # --- Configuration ---
 # Path to the JSONL dataset file (instruction/input/output).
 # This file will be used as the knowledge base for the RAG system.
-DATA_PATH = 'data'
-DATASET_FILE = os.path.join(DATA_PATH, 'navy_trade_data.jsonl')  # Ensure the path is correct
+DATA_PATH = "data"
+DATASET_FILE = os.path.join(
+    DATA_PATH, "navy_trade_data.jsonl"
+)  # Ensure the path is correct
 
 # Name of the embedding model to use.
 # This must match the model used in the test/FastAPI script for consistency.

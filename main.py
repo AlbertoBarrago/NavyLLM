@@ -111,7 +111,7 @@ def retrieve_context(
 
     # Search the FAISS index for the most similar vectors to the query embedding
     # D: distances, I: indices of the nearest chunks
-    distances, indices = index.search(query_embedding, num_results)
+    distances, indices = index.search(query_embedding, num_results) # pylint: disable=no-value-for-parameter
 
     # Retrieve the original text chunks corresponding to the found indices
     retrieved_texts = [chunks[i] for i in indices[0]]
