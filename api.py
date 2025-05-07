@@ -1,14 +1,15 @@
 import json
 import os
+from typing import List
 import torch
 import faiss
 import numpy as np
-from fastapi import FastAPI, Query, HTTPException
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from transformers import AutoTokenizer, T5ForConditionalGeneration
 from sentence_transformers import SentenceTransformer
-from typing import List, Dict, Any
 
 # --- Configurazione ---
 # Modello LLM
@@ -62,7 +63,9 @@ try:
     print(f"Modello LLM caricato e spostato su {device}.")
 except RuntimeError as e:
     print(f"Errore durante il caricamento del modello LLM: {e}")
-    raise HTTPException(status_code=500, detail=f"Errore nel caricamento del modello: {str(e)}")
+    raise HTTPException(
+        status_code=500, detail=f"Errore nel caricamento del modello: {str(e)}"
+    )
 
 print(f"Caricamento del modello di embedding: {EMBEDDING_MODEL_NAME}")
 try:
@@ -70,7 +73,10 @@ try:
     print("Modello di embedding caricato.")
 except RuntimeError as e:
     print(f"Errore durante il caricamento del modello di embedding: {e}")
-    raise HTTPException(status_code=500, detail=f"Errore nel caricamento del modello di embedding: {str(e)}")
+    raise HTTPException(
+        status_code=500,
+        detail=f"Errore nel caricamento del modello di embedding: {str(e)}",
+    )
 
 print("Caricamento dei componenti RAG (indice FAISS e chunks)...")
 try:
@@ -87,16 +93,18 @@ try:
     print("Componenti RAG caricati con successo.")
 except Exception as e:
     print(f"Errore durante il caricamento dei componenti RAG: {e}")
-    raise HTTPException(status_code=500, detail=f"Errore nel caricamento dei componenti RAG: {str(e)}")
+    raise HTTPException(
+        status_code=500, detail=f"Errore nel caricamento dei componenti RAG: {str(e)}"
+    )
 
 
 # --- Funzioni di supporto ---
 def retrieve_context(
-        query: str,
-        index: faiss.Index,
-        chunks: list,
-        embedding_model_response: SentenceTransformer,
-        num_results: int,
+    query: str,
+    index: faiss.Index,
+    chunks: list,
+    embedding_model_response: SentenceTransformer,
+    num_results: int,
 ) -> list:
     """Recupera i chunk di testo più rilevanti per una query."""
     query_embedding = embedding_model_response.encode(query)
@@ -107,11 +115,11 @@ def retrieve_context(
 
 
 def generate_response_with_context(
-        query: str,
-        context: list,
-        model_response: T5ForConditionalGeneration,
-        tokenizer_response: AutoTokenizer,
-        device_response: torch.device,
+    query: str,
+    context: list,
+    model_response: T5ForConditionalGeneration,
+    tokenizer_response: AutoTokenizer,
+    device_response: torch.device,
 ) -> str:
     """Genera una risposta utilizzando il modello LLM."""
     prompt = "Rispondi alla seguente domanda basata sul contesto fornito:\n"
@@ -144,7 +152,7 @@ def read_root():
     return {
         "name": "Navy LLM API",
         "description": "API per interrogare il modello LLM della Marina",
-        "usage": "Invia una richiesta POST a /ask con un JSON contenente una 'question'"
+        "usage": "Invia una richiesta POST a /ask con un JSON contenente una 'question'",
     }
 
 
@@ -168,8 +176,9 @@ async def ask_question(request: QuestionRequest):
 
     if not retrieved_context:
         return {
-            "answer": "Mi dispiace, non ho trovato informazioni rilevanti per rispondere alla tua domanda.",
-            "retrieved_contexts": []
+            "answer": "Mi dispiace, non ho trovato informazioni "
+            "rilevanti per rispondere alla tua domanda.",
+            "retrieved_contexts": [],
         }
 
     # Fase di generazione
@@ -177,10 +186,7 @@ async def ask_question(request: QuestionRequest):
         query, retrieved_context, model, tokenizer, device
     )
 
-    return {
-        "answer": response,
-        "retrieved_contexts": retrieved_context
-    }
+    return {"answer": response, "retrieved_contexts": retrieved_context}
 
 
 # --- Per esecuzione con uvicorn ---
