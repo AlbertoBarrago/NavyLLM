@@ -11,6 +11,9 @@ This API provides expert responses on topics including:
 - Import/export requirements
 - Customs duties and taxes
 
+## screenshot (ui) 
+![img.png](img.png)
+
 ## Project Structure
 
 - `api.py` - Backend for running uvicorn
