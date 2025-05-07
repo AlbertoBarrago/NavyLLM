@@ -18,7 +18,7 @@ model = get_peft_model(model, lora_config)
 
 model.print_trainable_parameters()
 
-dataset = load_dataset("json", data_files="navy_trade_data.jsonl")
+dataset = load_dataset("json", data_files="data/navy_trade_data.jsonl")
 
 train_test_split = dataset["train"].train_test_split(test_size=0.2, seed=42)
 dataset = DatasetDict({
