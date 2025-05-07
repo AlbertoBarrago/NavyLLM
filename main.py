@@ -1,133 +1,203 @@
 import torch
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from transformers import AutoTokenizer, T5ForConditionalGeneration
+import faiss
+import numpy as np
+import json
 import os
-from contextlib import asynccontextmanager # Import asynccontextmanager
+from transformers import AutoTokenizer, T5ForConditionalGeneration
+from sentence_transformers import SentenceTransformer
 
 # --- Configuration ---
 # LLM Model (Generator) Configuration
+# ID of the base T5 model (used to load the correct tokenizer)
 BASE_MODEL_ID = "google/flan-t5-base"
-MODEL_PATH = "./trained_model" # Directory where your fine-tuned T5 model is saved
+# Directory where your fine-tuned T5 model (with LoRA weights) is saved
+MODEL_PATH = "./trained_model"
 
-# Global variables to hold the loaded model
-tokenizer = None
-model = None
-device = None
+# RAG (Retrieval) Configuration
+# Name of the embedding model to use (must match the one used in build_rag_index.py)
+EMBEDDING_MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"
+# File of the FAISS index saved by build_rag_index.py (using the JSONL dataset)
+FAISS_INDEX_FILE = "data/maritime_dataset_rag.faiss"
+# File of the original text chunks saved by build_rag_index.py
+CHUNKS_FILE = "data/maritime_dataset_rag_chunks.json"
+# Number of top relevant chunks to retrieve for each query. Experiment with this value.
+NUM_RETRIEVED_CHUNKS = 3
 
-# --- Lifespan Event Handler ---
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """
-    Load the tokenizer and LLM model when the FastAPI application starts.
-    This function runs before the app starts serving requests.
-    """
-    global tokenizer, model, device
+# --- Load Models and Index ---
 
-    # Determine device
+# Load the tokenizer and the fine-tuned LLM model
+print(f"Loading LLM model from: {MODEL_PATH}")
+try:
+    # Load the tokenizer from the base model to ensure compatibility
+    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_ID)
+    # Load the T5 model with the fine-tuned (LoRA) weights
+    model = T5ForConditionalGeneration.from_pretrained(
+        MODEL_PATH,
+        low_cpu_mem_usage=True # Helps with memory usage during loading on CPU
+    )
+    # Determine and move the model to the appropriate device (GPU/CPU)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    model.to(device).eval() # Set the model to evaluation mode
+    print(f"LLM model loaded and moved to {device}.")
+except Exception as e:
+    print(f"Error loading LLM model: {e}")
+    exit() # Exit if the LLM model cannot be loaded
 
-    # Load Tokenizer and LLM Model
-    print(f"Loading LLM model from: {MODEL_PATH}")
-    try:
-        # Load the tokenizer from the base model
-        tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_ID)
-        # Load the fine-tuned model, potentially with LoRA weights
-        model = T5ForConditionalGeneration.from_pretrained(
-            MODEL_PATH,
-            # Adjust torch_dtype based on your training (fp16/bf16 or float32)
-            # If trained with fp16/bf16, loading with torch.float32 might be slower
-            # or require more memory on GPU, but is generally safe.
-            # If trained with float32, keep torch.float32.
-            # You can remove this line if your model was saved in default precision.
-            # torch_dtype=torch.float32,
-            low_cpu_mem_usage=True # Helps with memory usage on CPU during loading
+# Load the embedding model, used for creating vector representations of the text
+print(f"Loading embedding model: {EMBEDDING_MODEL_NAME}")
+try:
+    embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+    # embedding_model.to(device) # Uncomment to move the embedding model to GPU if preferred
+    print("Embedding model loaded.")
+except Exception as e:
+     print(f"Error loading embedding model: {e}")
+     exit() # Exit if the embedding model cannot be loaded
+
+# Load the FAISS index and the corresponding text chunks
+print(f"Loading RAG components (FAISS index and chunks)...")
+try:
+    # Check if the FAISS index file exists before attempting to load
+    if not os.path.exists(FAISS_INDEX_FILE):
+        raise FileNotFoundError(f"FAISS index file not found: {FAISS_INDEX_FILE}")
+    faiss_index = faiss.read_index(FAISS_INDEX_FILE)
+    print(f"FAISS index loaded with {faiss_index.ntotal} vectors.")
+
+    # Check if the text chunks file exists before attempting to load
+    if not os.path.exists(CHUNKS_FILE):
+         raise FileNotFoundError(f"Text chunks file not found: {CHUNKS_FILE}")
+    with open(CHUNKS_FILE, 'r', encoding='utf-8') as f:
+        text_chunks = json.load(f)
+    print(f"Loaded {len(text_chunks)} text chunks.")
+    print("RAG components loaded successfully.")
+
+except FileNotFoundError as e:
+    print(f"Error loading RAG components: {e}")
+    print("Please ensure build_rag_index_from_jsonl.py was run successfully and the files exist.")
+    exit() # Exit if RAG components cannot be loaded
+except Exception as e:
+    print(f"An unexpected error occurred loading RAG components: {e}")
+    exit() # Exit on other loading errors
+
+
+# --- Helper Function for Retrieval ---
+def retrieve_context(query: str, index: faiss.Index, chunks: list, embedding_model: SentenceTransformer, num_results: int) -> list:
+    """
+    Retrieves the most relevant text chunks for a given query from the FAISS index.
+
+    Args:
+        query (str): The user's query.
+        index (faiss.Index): The loaded FAISS index.
+        chunks (list): A list of original text chunks corresponding to the index.
+        embedding_model (SentenceTransformer): The model used to generate embeddings.
+        num_results (int): The number of top relevant chunks to retrieve.
+
+    Returns:
+        list: A list of strings, where each string is a retrieved text chunk.
+    """
+    # Create embedding of the query using the same model used for chunk embeddings
+    query_embedding = embedding_model.encode(query)
+    # Ensure the embedding is in float32 format and has the correct shape for FAISS
+    query_embedding = np.array([query_embedding]).astype('float32')
+
+    # Search the FAISS index for the most similar vectors to the query embedding
+    # D: distances (not used here), I: indices of the nearest chunks
+    distances, indices = index.search(query_embedding, num_results)
+
+    # Retrieve the original text chunks corresponding to the found indices
+    retrieved_texts = [chunks[i] for i in indices[0]]
+
+    return retrieved_texts
+
+# --- Helper Function for Generation with Context ---
+def generate_response_with_context(query: str, context: list, model: T5ForConditionalGeneration, tokenizer: AutoTokenizer, device: torch.device) -> str:
+    """
+    Generates a response using the LLM model, the original query, and the retrieved context.
+
+    Args:
+        query (str): The user's original query.
+        context (list): A list of retrieved text chunks to be used as context.
+        model (T5ForConditionalGeneration): The fine-tuned T5 model.
+        tokenizer (AutoTokenizer): The tokenizer for the T5 model.
+        device (torch.device): The device (CPU or GPU) the model is on.
+
+    Returns:
+        str: The generated response from the LLM.
+    """
+    # Construct the prompt for the T5 model.
+    # This format should match the one used in your train.py's tokenize_seq2seq function
+    # to teach the model how to use the context.
+    prompt = "Rispondi alla seguente domanda basata sul contesto fornito:\n"
+    # Join the retrieved chunks into a single context block within the prompt
+    prompt += "Contesto: " + "\n".join(context) + "\n"
+    # Add the user's original question
+    prompt += "Domanda: " + query + "\n"
+    # The model is trained to generate the response after the question
+
+    # Tokenize the complete prompt and move it to the appropriate device
+    # max_length should be enough to contain the query and context
+    inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True).to(device)
+
+    # Generate the response using the T5 model
+    with torch.no_grad(): # Disable gradient calculation for inference
+        outputs = model.generate(
+            inputs.input_ids,
+            max_new_tokens=250, # Maximum number of tokens to generate for the response
+            num_beams=1, # Use 1 for sampling, >1 for beam search (1 is often better for RAG)
+            temperature=0.6, # Controls randomness (0.0 for deterministic, >0 for random)
+            do_sample=True, # Enable sampling if temperature > 0
+            top_k=50, # Consider only the top K tokens for sampling
+            top_p=0.95, # Consider a minimum set of tokens whose cumulative probability exceeds P
+            # early_stopping=True # Can help stop generation early if an end-of-sequence token is generated
         )
-        model.to(device).eval() # Move model to device and set to evaluation mode
-        print("LLM model loaded successfully.")
-    except Exception as e:
-        print(f"Error loading LLM model: {e}")
-        # Raise an exception to prevent the app from starting if the model can't load
-        raise RuntimeError(f"Could not load LLM model: {e}")
 
-    # The `yield` statement is where the application starts serving requests.
-    # Code after yield runs on shutdown.
-    yield
+    # Decode the generated output tokens into a human-readable string
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-    # --- Shutdown Event: Clean up resources (Optional but recommended) ---
-    # For this simple case, explicit cleanup might not be strictly necessary
-    # as Python's garbage collector handles it, but it's good practice for
-    # more complex resources like database connections.
-    print("Shutting down application.")
-    # Example cleanup (though models usually don't need explicit closing):
-    # del model
-    # del tokenizer
-    # if torch.cuda.is_available():
-    #     torch.cuda.empty_cache()
+    return response
 
+# --- Interactive Test Loop ---
+if __name__ == "__main__":
+    print("\n--- Query the RAG-LLM System ---")
+    print("Type your question in Italian or 'esci' to exit.")
 
-# --- FastAPI App Initialization (with lifespan) ---
-app = FastAPI(lifespan=lifespan) # Pass the lifespan function here
+    # Enter an infinite loop to allow the user to ask multiple questions
+    while True:
+        # Prompt the user for input
+        user_query = input("\nLa tua domanda: ").strip()
 
-# --- Pydantic Model for Request Body ---
-class Query(BaseModel):
-    question: str
+        # Check if the user wants to exit
+        if user_query.lower() == 'esci':
+            break
 
-# --- FastAPI Endpoint ---
-@app.post("/ask")
-async def ask(query: Query):
-    """
-    Receives a question and generates a response using the T5 model directly (No RAG).
-    """
-    if model is None or tokenizer is None:
-        # This check should ideally not be needed if lifespan loaded correctly,
-        # but it's a safe fallback.
-        raise HTTPException(status_code=503, detail="Model not loaded yet.")
+        # Check if the query is not empty
+        if not user_query:
+            print("Please enter a valid question.")
+            continue
 
-    try:
-        # Construct the prompt using only the user's question
-        # Use the same prompt format as your training data for instructions without context
-        prompt = "Rispondi alla seguente domanda basata sul contesto:\n" + query.question
-        # If your training data *always* had a context prefix even when input was empty,
-        # you might need to adjust the prompt format here.
-        # Example if you always used "Contesto: \nDomanda:..." format:
-        # prompt = "Rispondi alla seguente domanda basata sul contesto:\nContesto: \nDomanda: " + query.question
+        # --- 1. Retrieval Phase ---
+        print("Retrieving context...")
+        # Call the retrieve_context function to find relevant chunks from the indexed dataset
+        retrieved_context = retrieve_context(user_query, faiss_index, text_chunks, embedding_model, NUM_RETRIEVED_CHUNKS)
 
+        # Print the retrieved context (optional but useful for debugging and understanding)
+        print("\nRetrieved Context:")
+        if retrieved_context:
+            for i, chunk in enumerate(retrieved_context):
+                print(f"--- Chunk {i+1} ---")
+                print(chunk)
+                print("-" * 10)
+        else:
+            print("No relevant context found in the dataset.")
 
-        # Tokenize the prompt and move to the device
-        inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True).to(device)
+        # --- 2. Generation Phase ---
+        print("\nGenerating response...")
+        # Call the generate_response_with_context function to get the answer from the LLM
+        # Pass the original query and the retrieved context
+        rag_response = generate_response_with_context(user_query, retrieved_context, model, tokenizer, device)
 
-        # Generate the response using the T5 model
-        with torch.no_grad(): # Disable gradient calculation for inference
-            outputs = model.generate(
-                inputs.input_ids,
-                max_new_tokens=250, # Max tokens for the generated response
-                num_beams=1, # Use 1 for sampling, >1 for beam search
-                temperature=0.8, # Controls randomness (0.0 deterministic, >0 random)
-                do_sample=True, # Enable sampling if temperature > 0
-                top_k=50, # Sample from top K tokens
-                top_p=0.95, # Sample from top P cumulative probability
-                # early_stopping=True # Can stop generation early if end-of-sequence token is generated
-            )
+        # Print the final response from the RAG-LLM system
+        print("\nResponse from RAG-LLM:")
+        print(rag_response)
+        print("-" * 30)
 
-        # Decode the generated output
-        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-        return {"question": query.question, "response": response}
-
-    except Exception as e:
-        print(f"An error occurred during processing: {e}")
-        raise HTTPException(status_code=500, detail="An internal error occurred.")
-
-# --- Example Usage (if running directly, typically you use uvicorn) ---
-# To run this application:
-# 1. Save the code as main.py (or another name).
-# 2. Ensure train.py was run and created the ./trained_model directory.
-# 3. Install uvicorn: pip install uvicorn
-# 4. Run from your terminal in the project root directory:
-#    uvicorn main:app --reload
-# 5. You can then send POST requests to http://127.0.0.1:8000/ask
-#    Example using curl:
-#    curl -X POST -H "Content-Type: application/json" -d '{"question": "Cos\'è il deposito doganale?"}' http://1.2.3.4:8000/ask
-    # Replace 1.2.3.4 with your server IP if not running locally
+    print("Session ended.")
