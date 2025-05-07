@@ -13,7 +13,7 @@ from typing import List, Dict, Any
 # --- Configurazione ---
 # Modello LLM
 BASE_MODEL_ID = "google/flan-t5-small"
-MODEL_PATH = "./trained_model"
+MODEL_PATH = "trained_model"
 
 # RAG
 EMBEDDING_MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"
@@ -138,7 +138,7 @@ def generate_response_with_context(
 
 
 # --- Endpoint API ---
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def read_root():
     """Endpoint principale che fornisce informazioni di base sull'API."""
     return {

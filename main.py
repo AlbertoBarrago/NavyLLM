@@ -13,7 +13,7 @@ from sentence_transformers import SentenceTransformer
 # ID of the base T5 model (used to load the correct tokenizer)
 BASE_MODEL_ID = "google/flan-t5-small"
 # Directory where your fine-tuned T5 model (with LoRA weights) is saved
-MODEL_PATH = "./trained_model"
+MODEL_PATH = "trained_model"
 
 # RAG (Retrieval) Configuration
 # Name of the embedding model to use (must match the one used in build_rag_index.py)
