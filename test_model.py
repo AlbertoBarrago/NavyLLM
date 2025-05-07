@@ -1,12 +1,11 @@
 from transformers import AutoTokenizer, T5ForConditionalGeneration
 
 BASE_MODEL_ID = "google/flan-t5-base"
-MODEL_PATH = "./trained_model"
+MODEL_PATH = "trained_model"
 
 tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_ID)
 model = T5ForConditionalGeneration.from_pretrained(MODEL_PATH)
 
-# Test with a question from your dataset
 test_question = "Qual è la differenza tra 'porto franco' e 'deposito doganale'?"
 inputs = tokenizer(test_question, return_tensors="pt")
 
