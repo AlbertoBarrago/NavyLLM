@@ -36,8 +36,8 @@ def load_dataset_data(filename):
         print(f"Error: Dataset file not found: {filename}")
         return []
     data = []
-    with open(filename, "r", encoding="utf-8") as f:
-        for line in f:
+    with open(filename, "r", encoding="utf-8") as handle_file:
+        for line in handle_file:
             try:
                 data.append(json.loads(line))
             except json.JSONDecodeError as e:
@@ -58,7 +58,7 @@ def create_rag_chunks_from_dataset(dataset_entries):
         list: A list of strings, where each string is a text chunk representing
               the combined input and output of a dataset entry.
     """
-    rag_chunks = []
+    rag_chunks_from_dataset = []
     # For each entry in the dataset, create a chunk that combines input and output.
     # This combined text will be what the RAG system retrieves.
     for entry in dataset_entries:
@@ -71,12 +71,12 @@ def create_rag_chunks_from_dataset(dataset_entries):
 
         # Add the chunk only if it contains significant text
         if chunk_text.strip():
-            rag_chunks.append(chunk_text.strip())
+            rag_chunks_from_dataset.append(chunk_text.strip())
 
     # Note: This function assumes each dataset entry (input + output)
     # is a suitable size for a RAG chunk. If input/output fields are
     # extremely long, you might need to add further chunking logic here.
-    return rag_chunks
+    return rag_chunks_from_dataset
 
 
 def build_faiss_index(chunks, model):
@@ -106,7 +106,7 @@ def build_faiss_index(chunks, model):
 
     # Add the vectors to the index
     print(f"Adding {len(embeddings)} vectors to the FAISS index...")
-    index.add(embeddings)
+    index.add(embeddings)  # pylint: disable=no-value-for-parameter
     print(f"FAISS index built with {index.ntotal} vectors.")
 
     return index
