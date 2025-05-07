@@ -6,3 +6,6 @@ datasets~=3.5.1
 requests~=2.32.3
 peft~=0.15.2
 pypdf~=5.4.0
+numpy~=2.2.5
+faiss-cpu~=1.11.0
+sentence-transformers~=4.1.0
