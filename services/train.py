@@ -34,7 +34,7 @@ model.print_trainable_parameters()
 
 # Load your data
 # Ensure the path to your dataset is correct
-DATA_PATH = "../data"
+DATA_PATH = "data"
 DATASET_PATH = os.path.join(DATA_PATH, "navy_trade_data.jsonl")
 if not os.path.exists(DATASET_PATH):
     print(f"Error: Dataset file not found at {DATASET_PATH}")

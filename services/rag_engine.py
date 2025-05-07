@@ -7,7 +7,8 @@ import faiss
 # --- Configuration ---
 # Path to the JSONL dataset file (instruction/input/output).
 # This file will be used as the knowledge base for the RAG system.
-DATASET_FILE = "../data/navy_trade_data.jsonl"  # Ensure the path is correct
+DATA_PATH = 'data'
+DATASET_FILE = os.path.join(DATA_PATH, 'navy_trade_data.jsonl')  # Ensure the path is correct
 
 # Name of the embedding model to use.
 # This must match the model used in the test/FastAPI script for consistency.
@@ -15,8 +16,8 @@ EMBEDDING_MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"
 
 # File names for saving the FAISS index and the corresponding text chunks.
 # Using distinct names helps avoid conflicts if you have multiple indices.
-FAISS_INDEX_FILE = "../data/maritime_dataset_rag.faiss"
-CHUNKS_FILE = "../data/maritime_dataset_rag_chunks.json"
+FAISS_INDEX_FILE = os.path.join(DATA_PATH, "maritime_dataset_rag.faiss")
+CHUNKS_FILE = os.path.join(DATA_PATH, "maritime_dataset_rag_chunks.json")
 
 # --- Functions ---
 
