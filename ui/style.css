@@ -1,0 +1,241 @@
+:root {
+    --apple-background: #f5f5f7;
+    --apple-card-bg: #ffffff;
+    --apple-blue: #0071e3;
+    --apple-blue-hover: #0077ed;
+    --apple-text-primary: #1d1d1f;
+    --apple-text-secondary: #86868b;
+    --apple-border: #d2d2d7;
+    --apple-response-bg: #f5f5f7;
+    --apple-context-bg: #f2f7ff;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    background-color: var(--apple-background);
+    color: var(--apple-text-primary);
+    line-height: 1.47059;
+    font-weight: 400;
+    letter-spacing: -0.022em;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: var(--apple-card-bg);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 18px;
+}
+
+textarea {
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 20px;
+    border: 1px solid var(--apple-border);
+    border-radius: 12px;
+    font-size: 17px;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    resize: none;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: var(--apple-blue);
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
+}
+
+button {
+    background-color: var(--apple-blue);
+    color: white;
+    padding: 12px 22px;
+    border: none;
+    border-radius: 980px; /* Apple's rounded button style */
+    cursor: pointer;
+    font-size: 17px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+button:hover {
+    background-color: var(--apple-blue-hover);
+    transform: scale(1.02);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+#responseArea, #contextArea {
+    width: 100%;
+    padding: 20px;
+    border-radius: 12px;
+    font-size: 17px;
+    box-sizing: border-box;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.5;
+}
+
+#responseArea {
+    background-color: var(--apple-response-bg);
+    min-height: 120px;
+    margin-bottom: 25px;
+    border: 1px solid var(--apple-border);
+}
+
+#contextArea {
+    background-color: var(--apple-context-bg);
+    min-height: 80px;
+    margin-top: 20px;
+    border: 1px solid rgba(0, 113, 227, 0.2);
+    color: var(--apple-text-primary);
+    font-size: 15px;
+}
+
+h1 {
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 30px;
+    color: var(--apple-text-primary);
+    text-align: center;
+    letter-spacing: -0.025em;
+}
+
+h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--apple-text-primary);
+    letter-spacing: -0.022em;
+    border: none;
+    padding: 0;
+}
+
+ul {
+    padding-left: 20px;
+    margin-bottom: 20px;
+    color: var(--apple-text-secondary);
+}
+
+li {
+    margin-bottom: 8px;
+}
+
+.intro {
+    text-align: center;
+    padding:0 20px;
+}
+
+/* New section styles */
+.question-section, .response-section, .context-section {
+    margin-bottom: 16px;
+}
+
+.hint-text {
+    color: var(--apple-text-secondary);
+    font-size: 15px;
+    margin-bottom: 12px;
+}
+
+/* Accessibility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+
+/* Foldable section styles */
+.foldable-section {
+    margin: 20px 0;
+    border: 1px solid var(--apple-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.foldable-header {
+    background-color: var(--apple-response-bg);
+    padding: 12px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.foldable-header:hover {
+    background-color: #eeeeee;
+}
+
+.foldable-header h3 {
+    margin: 0;
+    font-size: 17px;
+    color: var(--apple-text-primary);
+    font-weight: 500;
+}
+
+.foldable-content {
+    padding: 0 20px;
+    max-height: 1000px;
+    opacity: 1;
+    transition: all 0.3s ease-in-out;
+}
+
+.foldable-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+}
+
+.foldable-content ul {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+footer {
+    text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        margin: 20px auto;
+        padding: 24px;
+        border-radius: 14px;
+    }
+
+    h1 {
+        font-size: 28px;
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+
+    textarea, #responseArea, #contextArea {
+        padding: 14px;
+    }
+}
+
+/* Apple-style focus ring for all interactive elements */
+:focus {
+    outline: none;
+}
+
+:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.3);
+    border-radius: 8px;
+}
