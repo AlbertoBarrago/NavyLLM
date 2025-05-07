@@ -1,4 +1,6 @@
 import os
+import sys
+import torch
 
 from transformers import (
     AutoTokenizer,
@@ -9,7 +11,6 @@ from transformers import (
 )
 from peft import LoraConfig, get_peft_model, TaskType
 from datasets import load_dataset, DatasetDict
-import torch
 
 # Load tokenizer and base model
 MODEL_ID = "google/flan-t5-small"
@@ -38,7 +39,7 @@ DATASET_PATH = os.path.join(DATA_PATH, "navy_trade_data.jsonl")
 if not os.path.exists(DATASET_PATH):
     print(f"Error: Dataset file not found at {DATASET_PATH}")
     print("Please ensure your dataset is in the correct location.")
-    exit()
+    sys.exit()
 
 dataset = load_dataset("json", data_files=DATASET_PATH)
 
@@ -107,7 +108,7 @@ use_fp16 = (
 training_args = TrainingArguments(
     output_dir="../trained_model",  # Directory to save checkpoints
     per_device_train_batch_size=4,  # Increased batch size slightly if memory allows
-    gradient_accumulation_steps=2,  # Accumulate gradients over 2 steps to simulate a batch size of 4*2=8
+    gradient_accumulation_steps=2,  # Accumulate gradients (n) to simulate a batch size of 4*2=8
     num_train_epochs=30,  # Number of training epochs. Monitor eval_loss for overfitting.
     fp16=use_fp16,  # Use FP16 if supported and BF16 is not
     bf16=use_bf16,  # Use BF16 if supported (recommended over FP16 if available)

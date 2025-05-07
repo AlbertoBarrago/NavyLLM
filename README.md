@@ -38,6 +38,15 @@ This API provides expert responses on topics including:
 
 The API will be available at http://127.0.0.1:8000
 
+## Code Quality
+
+This project uses GitHub Actions to maintain code quality:
+
+- **Black**: Ensures consistent code formatting
+- **PyLint**: Checks for code quality issues
+
+The workflow runs automatically on push to the main branch and on pull requests.
+
 ## API Usage
 
 ### Ask a Question
