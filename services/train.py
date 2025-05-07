@@ -6,7 +6,7 @@ from datasets import load_dataset, DatasetDict
 import torch
 
 # Load tokenizer and base model
-MODEL_ID = "google/flan-t5-base"
+MODEL_ID = "google/flan-t5-small"
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
 model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_ID)
@@ -91,7 +91,7 @@ use_fp16 = torch.cuda.is_available() and not use_bf16 # Use FP16 if GPU is avail
 
 # Training configuration
 training_args = TrainingArguments(
-    output_dir="./trained_model", # Directory to save checkpoints
+    output_dir="../trained_model", # Directory to save checkpoints
     per_device_train_batch_size=4, # Increased batch size slightly if memory allows
     gradient_accumulation_steps=2, # Accumulate gradients over 2 steps to simulate a batch size of 4*2=8
     num_train_epochs=30, # Number of training epochs. Monitor eval_loss for overfitting.
@@ -125,9 +125,9 @@ print("Training completed. Saving model...")
 
 # Save the fine-tuned LoRA weights (Trainer might have already saved the best)
 # This ensures the adapter is saved in the specified directory
-model.save_pretrained("./trained_model")
+model.save_pretrained("../trained_model")
 
 # Save the tokenizer as well for easy loading later
-tokenizer.save_pretrained("./trained_model")
+tokenizer.save_pretrained("../trained_model")
 
 print("Model and tokenizer saved to ./trained_model")

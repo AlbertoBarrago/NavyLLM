@@ -131,7 +131,7 @@ if __name__ == "__main__":
             # 4. Build the FAISS index using the chunks and the embedding model
             faiss_index = build_faiss_index(rag_chunks, embedding_model)
 
-            # 5. Save the FAISS index and the original chunks to files
+            # 5. Save the FAISS index and the original chunks to file
             print(f"Saving FAISS index to '{FAISS_INDEX_FILE}'...")
             faiss.write_index(faiss_index, FAISS_INDEX_FILE)
             print("FAISS index saved.")

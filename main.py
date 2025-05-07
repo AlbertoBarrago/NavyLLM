@@ -9,7 +9,7 @@ from sentence_transformers import SentenceTransformer
 # --- Configuration ---
 # LLM Model (Generator) Configuration
 # ID of the base T5 model (used to load the correct tokenizer)
-BASE_MODEL_ID = "google/flan-t5-base"
+BASE_MODEL_ID = "google/flan-t5-small"
 # Directory where your fine-tuned T5 model (with LoRA weights) is saved
 MODEL_PATH = "./trained_model"
 
