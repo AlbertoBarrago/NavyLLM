@@ -15,7 +15,6 @@ This API provides expert responses on topics including:
 
 - `main.py` - The FastAPI application that serves the Q&A functionality
 - `navy_trade_data.jsonl` - Dataset of questions and expert answers
-- `test_main.http` - Example HTTP requests for testing
 
 ## Getting Started
 
@@ -30,7 +29,7 @@ This API provides expert responses on topics including:
 1. Clone this repository
 2. Install the required packages:
    ```
-   pip install fastapi uvicorn
+   pip install -r requirements.txt
    ```
 3. Run the API server:
    ```
