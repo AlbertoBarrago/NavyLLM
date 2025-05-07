@@ -7,7 +7,7 @@ import faiss
 # --- Configuration ---
 # Path to the JSONL dataset file (instruction/input/output).
 # This file will be used as the knowledge base for the RAG system.
-DATASET_FILE = "../data/navy_trade_data.jsonl" # Ensure the path is correct
+DATASET_FILE = "../data/navy_trade_data.jsonl"  # Ensure the path is correct
 
 # Name of the embedding model to use.
 # This must match the model used in the test/FastAPI script for consistency.
@@ -19,6 +19,7 @@ FAISS_INDEX_FILE = "../data/maritime_dataset_rag.faiss"
 CHUNKS_FILE = "../data/maritime_dataset_rag_chunks.json"
 
 # --- Functions ---
+
 
 def load_dataset_data(filename):
     """
@@ -35,7 +36,7 @@ def load_dataset_data(filename):
         print(f"Error: Dataset file not found: {filename}")
         return []
     data = []
-    with open(filename, 'r', encoding='utf-8') as f:
+    with open(filename, "r", encoding="utf-8") as f:
         for line in f:
             try:
                 data.append(json.loads(line))
@@ -43,6 +44,7 @@ def load_dataset_data(filename):
                 print(f"Error parsing JSON on line: {line.strip()} - {e}")
                 continue
     return data
+
 
 def create_rag_chunks_from_dataset(dataset_entries):
     """
@@ -65,11 +67,11 @@ def create_rag_chunks_from_dataset(dataset_entries):
         if entry.get("input"):
             chunk_text += "Contesto: " + entry["input"] + "\n"
         if entry.get("output"):
-             chunk_text += "Risposta: " + entry["output"]
+            chunk_text += "Risposta: " + entry["output"]
 
         # Add the chunk only if it contains significant text
         if chunk_text.strip():
-             rag_chunks.append(chunk_text.strip())
+            rag_chunks.append(chunk_text.strip())
 
     # Note: This function assumes each dataset entry (input + output)
     # is a suitable size for a RAG chunk. If input/output fields are
@@ -94,7 +96,7 @@ def build_faiss_index(chunks, model):
     print("Embedding generation completed.")
 
     # Ensure embeddings are in float32 format, required by FAISS
-    embeddings = np.array(embeddings).astype('float32')
+    embeddings = np.array(embeddings).astype("float32")
 
     # Get the dimensionality of the embeddings
     embedding_dim = embeddings.shape[1]
@@ -109,19 +111,24 @@ def build_faiss_index(chunks, model):
 
     return index
 
+
 # --- Execution ---
 if __name__ == "__main__":
     # 1. Load data from the JSONL dataset file
     dataset_data = load_dataset_data(DATASET_FILE)
     if not dataset_data:
-        print("No data to process. Ensure the DATASET_FILE exists and contains valid JSONL data.")
+        print(
+            "No data to process. Ensure the DATASET_FILE exists and contains valid JSONL data."
+        )
     else:
         # 2. Create RAG chunks from the dataset entries
         rag_chunks = create_rag_chunks_from_dataset(dataset_data)
         print(f"Created {len(rag_chunks)} RAG chunks from the dataset.")
 
         if not rag_chunks:
-             print("No valid chunks created from the dataset. Check the content of the JSONL file.")
+            print(
+                "No valid chunks created from the dataset. Check the content of the JSONL file."
+            )
         else:
             # 3. Load the embedding model
             print(f"Loading embedding model: {EMBEDDING_MODEL_NAME}")
@@ -137,10 +144,14 @@ if __name__ == "__main__":
             print("FAISS index saved.")
 
             print(f"Saving chunks to '{CHUNKS_FILE}'...")
-            with open(CHUNKS_FILE, 'w', encoding='utf-8') as f:
+            with open(CHUNKS_FILE, "w", encoding="utf-8") as f:
                 json.dump(rag_chunks, f, ensure_ascii=False, indent=4)
             print("Chunks saved.")
 
             print("\nIndex building process completed.")
-            print(f"Index and chunks saved as '{FAISS_INDEX_FILE}' and '{CHUNKS_FILE}'.")
-            print("Now you can use the test_model.py (RAG version) pointing to these new files.")
+            print(
+                f"Index and chunks saved as '{FAISS_INDEX_FILE}' and '{CHUNKS_FILE}'."
+            )
+            print(
+                "Now you can use the test_model.py (RAG version) pointing to these new files."
+            )

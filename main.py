@@ -33,15 +33,15 @@ try:
     # Load the T5 model with the fine-tuned (LoRA) weights
     model = T5ForConditionalGeneration.from_pretrained(
         MODEL_PATH,
-        low_cpu_mem_usage=True # Helps with memory usage during loading on CPU
+        low_cpu_mem_usage=True  # Helps with memory usage during loading on CPU
     )
     # Determine and move the model to the appropriate device (GPU/CPU)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device).eval() # Set the model to evaluation mode
+    model.to(device).eval()  # Set the model to evaluation mode
     print(f"LLM model loaded and moved to {device}.")
 except Exception as e:
     print(f"Error loading LLM model: {e}")
-    exit() # Exit if the LLM model cannot be loaded
+    exit()  # Exit if the LLM model cannot be loaded
 
 # Load the embedding model, used for creating vector representations of the text
 print(f"Loading embedding model: {EMBEDDING_MODEL_NAME}")
@@ -50,8 +50,8 @@ try:
     # embedding_model.to(device) # Uncomment to move the embedding model to GPU if preferred
     print("Embedding model loaded.")
 except Exception as e:
-     print(f"Error loading embedding model: {e}")
-     exit() # Exit if the embedding model cannot be loaded
+    print(f"Error loading embedding model: {e}")
+    exit()  # Exit if the embedding model cannot be loaded
 
 # Load the FAISS index and the corresponding text chunks
 print(f"Loading RAG components (FAISS index and chunks)...")
@@ -64,7 +64,7 @@ try:
 
     # Check if the text chunks file exists before attempting to load
     if not os.path.exists(CHUNKS_FILE):
-         raise FileNotFoundError(f"Text chunks file not found: {CHUNKS_FILE}")
+        raise FileNotFoundError(f"Text chunks file not found: {CHUNKS_FILE}")
     with open(CHUNKS_FILE, 'r', encoding='utf-8') as f:
         text_chunks = json.load(f)
     print(f"Loaded {len(text_chunks)} text chunks.")
@@ -73,14 +73,15 @@ try:
 except FileNotFoundError as e:
     print(f"Error loading RAG components: {e}")
     print("Please ensure build_rag_index_from_jsonl.py was run successfully and the files exist.")
-    exit() # Exit if RAG components cannot be loaded
+    exit()  # Exit if RAG components cannot be loaded
 except Exception as e:
     print(f"An unexpected error occurred loading RAG components: {e}")
-    exit() # Exit on other loading errors
+    exit()  # Exit on other loading errors
 
 
 # --- Helper Function for Retrieval ---
-def retrieve_context(query: str, index: faiss.Index, chunks: list, embedding_model: SentenceTransformer, num_results: int) -> list:
+def retrieve_context(query: str, index: faiss.Index, chunks: list, embedding_model: SentenceTransformer,
+                     num_results: int) -> list:
     """
     Retrieves the most relevant text chunks for a given query from the FAISS index.
 
@@ -108,8 +109,12 @@ def retrieve_context(query: str, index: faiss.Index, chunks: list, embedding_mod
 
     return retrieved_texts
 
+
 # --- Helper Function for Generation with Context ---
-def generate_response_with_context(query: str, context: list, model: T5ForConditionalGeneration, tokenizer: AutoTokenizer, device: torch.device) -> str:
+def generate_response_with_context(query: str, context: list,
+                                   model: T5ForConditionalGeneration,
+                                   tokenizer: AutoTokenizer,
+                                   device: torch.device) -> str:
     """
     Generates a response using the LLM model, the original query, and the retrieved context.
 
@@ -138,15 +143,15 @@ def generate_response_with_context(query: str, context: list, model: T5ForCondit
     inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True).to(device)
 
     # Generate the response using the T5 model
-    with torch.no_grad(): # Disable gradient calculation for inference
+    with torch.no_grad():  # Disable gradient calculation for inference
         outputs = model.generate(
             inputs.input_ids,
-            max_new_tokens=250, # Maximum number of tokens to generate for the response
-            num_beams=1, # Use 1 for sampling, >1 for beam search (1 is often better for RAG)
-            temperature=0.6, # Controls randomness (0.0 for deterministic, >0 for random)
-            do_sample=True, # Enable sampling if temperature > 0
-            top_k=50, # Consider only the top K tokens for sampling
-            top_p=0.95, # Consider a minimum set of tokens whose cumulative probability exceeds P
+            max_new_tokens=250,  # Maximum number of tokens to generate for the response
+            num_beams=1,  # Use 1 for sampling, >1 for beam search (1 is often better for RAG)
+            temperature=0.6,  # Controls randomness (0.0 for deterministic, >0 for random)
+            do_sample=True,  # Enable sampling if temperature > 0
+            top_k=50,  # Consider only the top K tokens for sampling
+            top_p=0.95,  # Consider a minimum set of tokens whose cumulative probability exceeds P
             # early_stopping=True # Can help stop generation early if an end-of-sequence token is generated
         )
 
@@ -155,21 +160,18 @@ def generate_response_with_context(query: str, context: list, model: T5ForCondit
 
     return response
 
+
 # --- Interactive Test Loop ---
 if __name__ == "__main__":
     print("\n--- Query the RAG-LLM System ---")
     print("Type your question in Italian or 'esci' to exit.")
 
-    # Enter an infinite loop to allow the user to ask multiple questions
     while True:
-        # Prompt the user for input
         user_query = input("\nLa tua domanda: ").strip()
 
-        # Check if the user wants to exit
         if user_query.lower() == 'esci':
             break
 
-        # Check if the query is not empty
         if not user_query:
             print("Please enter a valid question.")
             continue
@@ -177,13 +179,14 @@ if __name__ == "__main__":
         # --- 1. Retrieval Phase ---
         print("Retrieving context...")
         # Call the retrieve_context function to find relevant chunks from the indexed dataset
-        retrieved_context = retrieve_context(user_query, faiss_index, text_chunks, embedding_model, NUM_RETRIEVED_CHUNKS)
+        retrieved_context = retrieve_context(user_query, faiss_index, text_chunks, embedding_model,
+                                             NUM_RETRIEVED_CHUNKS)
 
         # Print the retrieved context (optional but useful for debugging and understanding)
         print("\nRetrieved Context:")
         if retrieved_context:
             for i, chunk in enumerate(retrieved_context):
-                print(f"--- Chunk {i+1} ---")
+                print(f"--- Chunk {i + 1} ---")
                 print(chunk)
                 print("-" * 10)
         else:
