@@ -4,24 +4,14 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import faiss
 
-# --- Configuration ---
-# Path to the JSONL dataset file (instruction/input/output).
-# This file will be used as the knowledge base for the RAG system.
 DATA_PATH = "data"
 DATASET_FILE = os.path.join(
     DATA_PATH, "navy_trade_data.jsonl"
-)  # Ensure the path is correct
+)
 
-# Name of the embedding model to use.
-# This must match the model used in the test/FastAPI script for consistency.
 EMBEDDING_MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"
-
-# File names for saving the FAISS index and the corresponding text chunks.
-# Using distinct names helps avoid conflicts if you have multiple indices.
 FAISS_INDEX_FILE = os.path.join(DATA_PATH, "maritime_dataset_rag.faiss")
 CHUNKS_FILE = os.path.join(DATA_PATH, "maritime_dataset_rag_chunks.json")
-
-# --- Functions ---
 
 
 def load_dataset_data(filename):
@@ -62,11 +52,9 @@ def create_rag_chunks_from_dataset(dataset_entries):
               the combined input and output of a dataset entry.
     """
     rag_chunks_from_dataset = []
-    # For each entry in the dataset, create a chunk that combines input and output.
-    # This combined text will be what the RAG system retrieves.
+    
     for entry in dataset_entries:
         chunk_text = ""
-        # Include 'Input' and 'Output' labels to give structure to the retrieved text
         if entry.get("input"):
             chunk_text += "Contesto: " + entry["input"] + "\n"
         if entry.get("output"):
@@ -94,20 +82,15 @@ def build_faiss_index(chunks, model):
         faiss.Index: The built FAISS index containing the chunk embeddings.
     """
     print(f"Generating embeddings for {len(chunks)} chunks...")
-    # Encode the chunks into vectors (embeddings)
     embeddings = model.encode(chunks, show_progress_bar=True)
     print("Embedding generation completed.")
 
-    # Ensure embeddings are in float32 format, required by FAISS
     embeddings = np.array(embeddings).astype("float32")
 
-    # Get the dimensionality of the embeddings
     embedding_dim = embeddings.shape[1]
 
-    # Create a FAISS index (using a simple FlatL2 index based on Euclidean distance)
     index = faiss.IndexFlatL2(embedding_dim)
 
-    # Add the vectors to the index
     print(f"Adding {len(embeddings)} vectors to the FAISS index...")
     index.add(embeddings)  # pylint: disable=no-value-for-parameter
     print(f"FAISS index built with {index.ntotal} vectors.")
@@ -115,16 +98,13 @@ def build_faiss_index(chunks, model):
     return index
 
 
-# --- Execution ---
 if __name__ == "__main__":
-    # 1. Load data from the JSONL dataset file
     dataset_data = load_dataset_data(DATASET_FILE)
     if not dataset_data:
         print(
             "No data to process. Ensure the DATASET_FILE exists and contains valid JSONL data."
         )
     else:
-        # 2. Create RAG chunks from the dataset entries
         rag_chunks = create_rag_chunks_from_dataset(dataset_data)
         print(f"Created {len(rag_chunks)} RAG chunks from the dataset.")
 
@@ -133,15 +113,12 @@ if __name__ == "__main__":
                 "No valid chunks created from the dataset. Check the content of the JSONL file."
             )
         else:
-            # 3. Load the embedding model
             print(f"Loading embedding model: {EMBEDDING_MODEL_NAME}")
             embedding_model = SentenceTransformer(EMBEDDING_MODEL_NAME)
             print("Embedding model loaded.")
 
-            # 4. Build the FAISS index using the chunks and the embedding model
             faiss_index = build_faiss_index(rag_chunks, embedding_model)
 
-            # 5. Save the FAISS index and the original chunks to file
             print(f"Saving FAISS index to '{FAISS_INDEX_FILE}'...")
             faiss.write_index(faiss_index, FAISS_INDEX_FILE)
             print("FAISS index saved.")
