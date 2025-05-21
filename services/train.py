@@ -128,11 +128,11 @@ training_args = TrainingArguments(
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=tokenized_dataset["train"],  # Specify the training dataset split
+    train_dataset=tokenized_dataset["train"],
     eval_dataset=tokenized_dataset[
         "validation"
-    ],  # Specify the validation dataset split
-    data_collator=data_collator,  # Use the data collator
+    ],
+    data_collator=data_collator,
 )
 
 # Start training
