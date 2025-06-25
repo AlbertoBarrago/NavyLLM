@@ -14,18 +14,20 @@ from sentence_transformers import SentenceTransformer
 # --- Configurazione ---
 # Modello LLM
 BASE_MODEL_ID = "google/flan-t5-small"
-MODEL_PATH = "trained_model"
+MODEL_PATH = "../trained_model"
 
 # RAG
 EMBEDDING_MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"
-FAISS_INDEX_FILE = "data/old_data/maritime_dataset_rag.faiss"
-CHUNKS_FILE = "data/old_data/maritime_dataset_rag_chunks.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "../data")
+FAISS_INDEX_FILE = os.path.join(DATA_DIR, "ai_dataset_rag.faiss")
+CHUNKS_FILE = os.path.join(DATA_DIR, "ai_dataset_rag_chunks.json")
 NUM_RETRIEVED_CHUNKS = 3
 
 # Creazione dell'app FastAPI
 app = FastAPI(
-    title="Navy LLM API",
-    description="API RAG-LLM per interrogare il modello della Marina",
+    title="AI Triks",
+    description="API RAG-LLM per migliorare l'uso delle AI",
     version="1.0.0",
 )
 

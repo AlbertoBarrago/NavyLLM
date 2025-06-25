@@ -52,7 +52,7 @@ def create_rag_chunks_from_dataset(dataset_entries):
               the combined input and output of a dataset entry.
     """
     rag_chunks_from_dataset = []
-    
+
     for entry in dataset_entries:
         chunk_text = ""
         if entry.get("input"):

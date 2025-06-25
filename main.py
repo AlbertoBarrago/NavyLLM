@@ -19,9 +19,9 @@ MODEL_PATH = "trained_model"
 # Name of the embedding model to use (must match the one used in build_rag_index.py)
 EMBEDDING_MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"
 # File of the FAISS index saved by build_rag_index.py (using the JSONL dataset)
-FAISS_INDEX_FILE = "data/old_data/maritime_dataset_rag.faiss"
+FAISS_INDEX_FILE = "data/ai_dataset_rag.faiss"
 # File of the original text chunks saved by build_rag_index.py
-CHUNKS_FILE = "data/old_data/maritime_dataset_rag_chunks.json"
+CHUNKS_FILE = "data/ai_dataset_rag_chunks.json"
 # Number of top relevant chunks to retrieve for each query. Experiment with this value.
 NUM_RETRIEVED_CHUNKS = 3
 
