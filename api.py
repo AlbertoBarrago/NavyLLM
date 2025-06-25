@@ -18,8 +18,8 @@ MODEL_PATH = "trained_model"
 
 # RAG
 EMBEDDING_MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"
-FAISS_INDEX_FILE = "data/maritime_dataset_rag.faiss"
-CHUNKS_FILE = "data/maritime_dataset_rag_chunks.json"
+FAISS_INDEX_FILE = "data/old_data/maritime_dataset_rag.faiss"
+CHUNKS_FILE = "data/old_data/maritime_dataset_rag_chunks.json"
 NUM_RETRIEVED_CHUNKS = 3
 
 # Creazione dell'app FastAPI

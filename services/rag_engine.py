@@ -6,12 +6,12 @@ import faiss
 
 DATA_PATH = "data"
 DATASET_FILE = os.path.join(
-    DATA_PATH, "navy_trade_data.jsonl"
+    DATA_PATH, "ai_data.jsonl"
 )
 
 EMBEDDING_MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"
-FAISS_INDEX_FILE = os.path.join(DATA_PATH, "maritime_dataset_rag.faiss")
-CHUNKS_FILE = os.path.join(DATA_PATH, "maritime_dataset_rag_chunks.json")
+FAISS_INDEX_FILE = os.path.join(DATA_PATH, "ai_dataset_rag.faiss")
+CHUNKS_FILE = os.path.join(DATA_PATH, "ai_dataset_rag_chunks.json")
 
 
 def load_dataset_data(filename):
